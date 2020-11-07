@@ -1,0 +1,32 @@
+FROM kiwenlau/hadoop:1.0
+
+WORKDIR /root
+
+# install mysql driver
+RUN wget -nv https://cdn.mysql.com/archives/mysql-connector-java-5.1/mysql-connector-java-5.1.38.tar.gz && \
+    tar -xzf mysql-connector-java-5.1.38.tar.gz && \
+    mv mysql-connector-java-5.1.38/mysql-connector-java-5.1.38-bin.jar /root && \
+    rm mysql-connector-java-5.1.38.tar.gz
+
+# install hive
+RUN wget -nv https://archive.apache.org/dist/hive/hive-2.1.1/apache-hive-2.1.1-bin.tar.gz && \
+    tar -xzf apache-hive-2.1.1-bin.tar.gz && \
+    mv /root/mysql-connector-java-5.1.38-bin.jar apache-hive-2.1.1-bin/lib && \
+    rm apache-hive-2.1.1-bin.tar.gz && \
+    cp apache-hive-2.1.1-bin/conf/hive-default.xml.template apache-hive-2.1.1-bin/conf/hive-site.xml && \
+    sed -i 's/${system:java.io.tmpdir}/\/tmp/g' apache-hive-2.1.1-bin/conf/hive-site.xml && \
+    sed -i 's/${system:user.name}/\/wave/g' apache-hive-2.1.1-bin/conf/hive-site.xml && \
+    sed -i 's/<value>jdbc[a-zA-Z:;=_]*<\/value>/<value>jdbc:mysql:\/\/127.0.0.1:3306\/hive?createDatabaseIfNotExist=true\&amp;useSSL=true<\/value>/g' apache-hive-2.1.1-bin/conf/hive-site.xml
+
+# install sqoop
+RUN wget -nv https://mirrors.gigenet.com/apache/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz && \
+    tar -xzf sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz && \
+    rm sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz
+
+# set environment variable
+ENV HIVE_HOME=/root/apache-hive-2.1.1-bin
+ENV HIVE_CONF_DIR=${HIVE_HOME}/conf 
+ENV HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$HIVE_HOME/lib/*
+
+CMD [ "sh", "-c", "service ssh start; bash"]
+
