@@ -16,6 +16,7 @@ RUN wget -nv https://archive.apache.org/dist/hive/hive-2.1.1/apache-hive-2.1.1-b
     cp apache-hive-2.1.1-bin/conf/hive-default.xml.template apache-hive-2.1.1-bin/conf/hive-site.xml && \
     sed -i 's/${system:java.io.tmpdir}/\/tmp/g' apache-hive-2.1.1-bin/conf/hive-site.xml && \
     sed -i 's/${system:user.name}/\/wave/g' apache-hive-2.1.1-bin/conf/hive-site.xml && \
+    sed -i '/<name>hive.server2.authentication<\/name>/{n;s/NONE/NOSASL/;}' apache-hive-2.1.1-bin/conf/hive-site.xml && \
     sed -i 's/<value>jdbc[a-zA-Z:;=_]*<\/value>/<value>jdbc:mysql:\/\/127.0.0.1:3306\/hive?createDatabaseIfNotExist=true\&amp;useSSL=true<\/value>/g' apache-hive-2.1.1-bin/conf/hive-site.xml
 
 # install sqoop
@@ -27,6 +28,11 @@ RUN wget -nv https://mirrors.gigenet.com/apache/sqoop/1.4.7/sqoop-1.4.7.bin__had
 ENV HIVE_HOME=/root/apache-hive-2.1.1-bin
 ENV HIVE_CONF_DIR=${HIVE_HOME}/conf 
 ENV HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$HIVE_HOME/lib/*
+
+COPY config/* /tmp/
+
+RUN mv /tmp/start-hive.sh ~/start-hive.sh
+RUN chmod +x ~/start-hive.sh
 
 CMD [ "sh", "-c", "service ssh start; bash"]
 
